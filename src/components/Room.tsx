@@ -1,11 +1,20 @@
 "use client";
 
 import useRoom, { type User } from "@/hooks/useRoom";
-import useTransition, { TransitionStatus } from "@/hooks/useTransition";
+import useTransition, {
+  ConnectionStatus,
+  TransitionStatus,
+} from "@/hooks/useTransition";
 import { Laptop, Smartphone } from "lucide-react";
 import TransitionProgress from "./TransitionProgress";
 import { Button } from "./ui/button";
 import { Popover, PopoverAnchor, PopoverContent } from "./ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 interface RoomProps {
   name: string;
@@ -35,6 +44,57 @@ const Room: React.FC<RoomProps> = ({ name }) => {
       request(target, files);
     };
 
+  const renderConnectionStatus = (status?: ConnectionStatus) => {
+    switch (status) {
+      case ConnectionStatus.connecting:
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500" />
+                </span>
+              </TooltipTrigger>
+
+              <TooltipContent>WebRTC Connecting</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      case ConnectionStatus.connected:
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
+                </span>
+              </TooltipTrigger>
+
+              <TooltipContent>WebRTC Connected</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      case ConnectionStatus.error:
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <span className="relative flex h-3 w-3">
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                </span>
+              </TooltipTrigger>
+
+              <TooltipContent>WebRTC Error</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div>
       <ul className="flex gap-4">
@@ -60,6 +120,7 @@ const Room: React.FC<RoomProps> = ({ name }) => {
                         meta[user.id]?.length
                       } files to you.`}
                 </p>
+
                 <div className="flex justify-end gap-4">
                   <Button onClick={() => reject(user)}>Reject</Button>
                   <Button onClick={() => accept(user)}>Accept</Button>
@@ -67,7 +128,11 @@ const Room: React.FC<RoomProps> = ({ name }) => {
               </PopoverContent>
             </Popover>
 
-            <span className="font-bold">{user.name}</span>
+            <div className="flex gap-2 items-center">
+              <span className="font-bold">{user.name}</span>
+              {renderConnectionStatus(connections[user.id])}
+            </div>
+
             <div className="flex gap-1 text-xs text-neutral-400">
               <span>{progress[user.id]}</span>
               {status[user.id] === TransitionStatus.pending && (

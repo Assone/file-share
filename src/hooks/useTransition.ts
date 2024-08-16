@@ -48,7 +48,7 @@ type TransitionDataChannelMessages =
   | P2PMessage<"transition-file-end", FileMeta>
   | P2PMessage<"transition-file-progress", { progress: number } & FileMeta>;
 
-enum ConnectionStatus {
+export enum ConnectionStatus {
   connecting,
   connected,
   error,
@@ -172,6 +172,25 @@ export default function useTransition(roomName: string) {
   const onCreateHost = useCallback(
     async (sid: string) => {
       const peer = new PeerConnection<TransitionDataChannelMessages>();
+
+      peer.addEventListener("status", ({ data }) => {
+        const status =
+          data === "connected"
+            ? ConnectionStatus.connected
+            : data === "connecting"
+            ? ConnectionStatus.connecting
+            : data === "failed"
+            ? ConnectionStatus.error
+            : undefined;
+
+        dispatch({
+          type: "set-connection",
+          payload: {
+            sid,
+            status,
+          },
+        });
+      });
 
       onIceCandidateListener(peer.connection!, sid, "host");
       const offer = await peer.connection?.createOffer();
