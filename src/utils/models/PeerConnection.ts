@@ -2,6 +2,7 @@ import { isObject, isString } from "../is";
 
 interface EventMap<Message> {
   message: MessageEvent<Message>;
+  status: MessageEvent<RTCPeerConnectionState>;
 }
 
 interface PeerConnectionOptions {
@@ -64,6 +65,10 @@ export default class PeerConnection<Message = unknown> {
       "disconnected",
       "failed",
     ];
+
+    this.eventTarget.dispatchEvent(
+      new MessageEvent("status", { data: status })
+    );
 
     if (status.includes(this.connection?.connectionState || "failed")) {
       this.connection?.close();

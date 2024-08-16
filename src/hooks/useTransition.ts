@@ -48,10 +48,17 @@ type TransitionDataChannelMessages =
   | P2PMessage<"transition-file-end", FileMeta>
   | P2PMessage<"transition-file-progress", { progress: number } & FileMeta>;
 
+enum ConnectionStatus {
+  connecting,
+  connected,
+  error,
+}
+
 interface States {
   meta: Record<string, FileMeta[] | undefined>;
   status: Record<string, TransitionStatus | undefined>;
   progress: Record<string, number | undefined>;
+  connections: Record<string, ConnectionStatus | undefined>;
 }
 
 type EventType<T extends string, D extends Record<string, any> = {}> = {
@@ -68,7 +75,11 @@ type Actions =
         status: TransitionStatus | undefined;
       }
     >
-  | EventType<"set-progress", { sid: string; progress: number | undefined }>;
+  | EventType<"set-progress", { sid: string; progress: number | undefined }>
+  | EventType<
+      "set-connection",
+      { sid: string; status: ConnectionStatus | undefined }
+    >;
 
 const reducer: Reducer<States, Actions> = (prevState, action) => {
   switch (action.type) {
@@ -107,6 +118,18 @@ const reducer: Reducer<States, Actions> = (prevState, action) => {
         },
       };
     }
+
+    case "set-connection": {
+      const { sid, status } = action.payload;
+
+      return {
+        ...prevState,
+        connections: {
+          ...prevState.connections,
+          [sid]: status,
+        },
+      };
+    }
   }
 };
 
@@ -118,6 +141,7 @@ export default function useTransition(roomName: string) {
     meta: {},
     status: {},
     progress: {},
+    connections: {},
   });
   const files = useRef(new Map<string, File[]>());
   const host = useRef(
@@ -241,6 +265,24 @@ export default function useTransition(roomName: string) {
           break;
         }
       }
+    });
+    peer.addEventListener("status", ({ data }) => {
+      const status =
+        data === "connected"
+          ? ConnectionStatus.connected
+          : data === "connecting"
+          ? ConnectionStatus.connecting
+          : data === "failed"
+          ? ConnectionStatus.error
+          : undefined;
+
+      dispatch({
+        type: "set-connection",
+        payload: {
+          sid,
+          status,
+        },
+      });
     });
 
     client.current.set(sid, peer);
@@ -478,9 +520,7 @@ export default function useTransition(roomName: string) {
   }, [onCreateHost, onStartTransition, roomName, user.id]);
 
   return {
-    requests: state.meta,
-    status: state.status,
-    progress: state.progress,
+    ...state,
 
     accept,
     reject,

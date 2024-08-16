@@ -1,7 +1,7 @@
 "use client";
 
 import useRoom, { type User } from "@/hooks/useRoom";
-import { TransitionStatus } from "@/hooks/useTransition";
+import useTransition, { TransitionStatus } from "@/hooks/useTransition";
 import { Laptop, Smartphone } from "lucide-react";
 import TransitionProgress from "./TransitionProgress";
 import { Button } from "./ui/button";
@@ -12,15 +12,17 @@ interface RoomProps {
 }
 
 const Room: React.FC<RoomProps> = ({ name }) => {
+  const { users } = useRoom(name);
   const {
-    users,
-    transitionRequests,
-    transitionStatus,
-    transitionProgress,
-    onTransitionRequest,
-    onTransitionAccept,
-    onTransitionReject,
-  } = useRoom(name);
+    meta,
+    status,
+    progress,
+    connections,
+
+    accept,
+    reject,
+    request,
+  } = useTransition(name);
 
   const onFileChange =
     (target: User) => (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,7 +32,7 @@ const Room: React.FC<RoomProps> = ({ name }) => {
 
       evt.target.value = "";
 
-      onTransitionRequest(target, files);
+      request(target, files);
     };
 
   return (
@@ -38,9 +40,9 @@ const Room: React.FC<RoomProps> = ({ name }) => {
       <ul className="flex gap-4">
         {users.map((user) => (
           <li key={user.id} className="flex flex-col items-center">
-            <Popover open={transitionRequests[user.id] !== undefined}>
+            <Popover open={meta[user.id] !== undefined}>
               <PopoverAnchor>
-                <TransitionProgress progress={transitionProgress[user.id]}>
+                <TransitionProgress progress={progress[user.id]}>
                   <label htmlFor="file">
                     <div className="border rounded-full p-4 cursor-pointer bg-white">
                       {user.mobile ? <Smartphone /> : <Laptop />}
@@ -50,38 +52,34 @@ const Room: React.FC<RoomProps> = ({ name }) => {
               </PopoverAnchor>
               <PopoverContent className="flex flex-col gap-2">
                 <p className="break-words">
-                  {transitionRequests[user.id]?.length === 1
+                  {meta[user.id]?.length === 1
                     ? `${user.name} wants send ${
-                        transitionRequests[user.id]?.[0].name
+                        meta[user.id]?.[0].name
                       } to you.`
                     : `${user.name} wants send ${
-                        transitionRequests[user.id]?.length
+                        meta[user.id]?.length
                       } files to you.`}
                 </p>
                 <div className="flex justify-end gap-4">
-                  <Button onClick={() => onTransitionReject(user)}>
-                    Reject
-                  </Button>
-                  <Button onClick={() => onTransitionAccept(user)}>
-                    Accept
-                  </Button>
+                  <Button onClick={() => reject(user)}>Reject</Button>
+                  <Button onClick={() => accept(user)}>Accept</Button>
                 </div>
               </PopoverContent>
             </Popover>
 
             <span className="font-bold">{user.name}</span>
             <div className="flex gap-1 text-xs text-neutral-400">
-              <span>{transitionProgress[user.id]}</span>
-              {transitionStatus[user.id] === TransitionStatus.pending && (
+              <span>{progress[user.id]}</span>
+              {status[user.id] === TransitionStatus.pending && (
                 <span>Pending</span>
               )}
-              {transitionStatus[user.id] === TransitionStatus.rejected && (
+              {status[user.id] === TransitionStatus.rejected && (
                 <span>Rejected</span>
               )}
-              {transitionStatus[user.id] === TransitionStatus.accepted && (
+              {status[user.id] === TransitionStatus.accepted && (
                 <span>Accepted</span>
               )}
-              {transitionStatus[user.id] === undefined && (
+              {status[user.id] === undefined && (
                 <>
                   <span>{user.platform}</span>
                   <span>{user.browser}</span>

@@ -9,7 +9,6 @@ import {
   type RealtimeChannel,
 } from "@supabase/supabase-js";
 import { useEffect, useMemo, useRef, useState } from "react";
-import useTransition from "./useTransition";
 
 export interface User {
   id: string;
@@ -29,16 +28,6 @@ export default function useRoom(roomName: string) {
   );
 
   const channel = useRef<RealtimeChannel>();
-
-  const {
-    requests: transitionRequests,
-    status: transitionStatus,
-    progress: transitionProgress,
-
-    accept: onTransitionAccept,
-    reject: onTransitionReject,
-    request: onTransitionRequest,
-  } = useTransition(roomName);
 
   useEffect(() => {
     const roomChannel = supabase.current
@@ -69,13 +58,5 @@ export default function useRoom(roomName: string) {
 
   return {
     users,
-
-    transitionRequests,
-    transitionStatus,
-    transitionProgress,
-
-    onTransitionRequest,
-    onTransitionAccept,
-    onTransitionReject,
   };
 }
