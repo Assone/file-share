@@ -231,6 +231,7 @@ export default function useTransition(roomName: string) {
     let chunkMerger: FileMerger | null = null;
     peer.addEventListener("message", ({ data: message }) => {
       if (isArrayBuffer(message)) {
+        console.log("buffer", message);
         chunkMerger?.receive(message);
 
         return;
@@ -244,6 +245,7 @@ export default function useTransition(roomName: string) {
 
         case "transition-file-end": {
           const blob = chunkMerger!.merge()!;
+          console.log(chunkMerger);
           chunkMerger = null;
           currentReceiverCount += 1;
 
@@ -255,7 +257,6 @@ export default function useTransition(roomName: string) {
         case "transition-file-progress": {
           const progress =
             (message.progress + currentReceiverCount) / (info?.count || 0);
-          console.log("[PeerConnection] Received File Progress:", progress);
 
           dispatch({
             type: "set-progress",
@@ -294,7 +295,6 @@ export default function useTransition(roomName: string) {
       }
     });
     peer.addEventListener("status", ({ data }) => {
-      console.log("???", data);
       const status =
         data === "connected"
           ? ConnectionStatus.connected
