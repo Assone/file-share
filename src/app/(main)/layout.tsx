@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -7,13 +6,6 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Cog } from "lucide-react";
 import Link from "next/link";
 import type { PropsWithChildren } from "react";
 
@@ -40,17 +32,6 @@ const Layout: React.FC<PropsWithChildren> = ({ children }) => {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Cog />
-              </Button>
-            </TooltipTrigger>
-
-            <TooltipContent>Settings</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
       </div>
 
       <Separator />

@@ -133,6 +133,19 @@ const reducer: Reducer<States, Actions> = (prevState, action) => {
   }
 };
 
+const downloadBlob = (blob: Blob, name: string) => {
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+  a.remove();
+};
+
 export default function useTransition(roomName: string) {
   const supabase = useRef(createClient());
   const channel = useRef<RealtimeChannel>();
@@ -150,7 +163,6 @@ export default function useTransition(roomName: string) {
   const client = useRef(
     new Map<string, PeerConnection<TransitionDataChannelMessages>>()
   );
-  const receiveBlobs = useRef(new Map<string, Blob[]>());
 
   const onIceCandidateListener = useCallback(
     (connection: RTCPeerConnection, sid: string, target: Target) => {
@@ -235,7 +247,8 @@ export default function useTransition(roomName: string) {
           chunkMerger = null;
           currentReceiverCount += 1;
 
-          receiveBlobs.current.get(sid)?.push(blob);
+          downloadBlob(blob, message.name);
+
           break;
         }
 
@@ -261,15 +274,10 @@ export default function useTransition(roomName: string) {
         }
 
         case "transition-start": {
-          receiveBlobs.current.set(sid, []);
           break;
         }
 
         case "transition-end": {
-          const blobs = receiveBlobs.current.get(sid) || [];
-
-          // TODO: download
-
           dispatch({
             type: "set-progress",
             payload: {
@@ -280,12 +288,13 @@ export default function useTransition(roomName: string) {
 
           info = null;
           currentReceiverCount = 0;
-          receiveBlobs.current.delete(sid);
+
           break;
         }
       }
     });
     peer.addEventListener("status", ({ data }) => {
+      console.log("???", data);
       const status =
         data === "connected"
           ? ConnectionStatus.connected
