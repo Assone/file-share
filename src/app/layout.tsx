@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { TRPCReactProvider } from "@/utils/trpc/react";
 import { HydrateClient } from "@/utils/trpc/server";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -23,6 +24,7 @@ export default function RootLayout({
         <TRPCReactProvider>
           <HydrateClient>{children}</HydrateClient>
         </TRPCReactProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
