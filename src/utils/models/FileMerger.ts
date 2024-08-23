@@ -13,8 +13,7 @@ export default class FileMerger {
 
   receive(chunk: ArrayBuffer) {
     const size = this.bytesReceived + chunk.byteLength;
-    const progress = size / this.meta.size;
-    const isReceiveEnd = size >= this.meta.size;
+    const isReceiveEnd = size > this.meta.size;
 
     if (isReceiveEnd) {
       return;
