@@ -24,7 +24,15 @@ export default class PeerConnection<Message = unknown> {
   }
 
   connect() {
-    this.connection = new RTCPeerConnection();
+    this.connection = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun.qq.com:3478" },
+        { urls: "stun:stun.chat.bilibili.com:3478" },
+        { urls: "stun:stun.cloudflare.com:3478" },
+        { urls: "stun:stun.l.google.com:19302" },
+      ],
+    });
 
     this.connection.addEventListener(
       "connectionstatechange",
